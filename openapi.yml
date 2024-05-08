@@ -1,0 +1,312 @@
+openapi: 3.0.3
+info:
+  title: Weather Union
+  description: >-
+    # Note
+    
+    This is not an official spec. This is simply an attempt to translate the PDF documentation into an OpenAPI spec to aid in code generation.
+  
+    # Introduction
+    
+    With weather APIs, you can easily integrate live weather data into your system and use
+    it for your business applications.
+    
+    # Key highlights
+    
+    - We’re spread across 30 cities, having 600+ weather devices. There are two type of devices,
+      - Automated Weather Stations (AWS) - Capturing 5+ weather parameters
+      - Rain Gauge Systems - Capturing rain intensity and rain accumulation
+    - We have two APIs to cater to your live weather needs
+      - API for current weather data at a given latitude and longitude
+      - API for current weather data in a locality/ city
+      
+    Please find the list of cities and localities where we’re serviceable.
+    
+    
+    [Weather Union - A Zomato Giveback - City, Locality List](https://b.zmtcdn.com/data/file_assets/65fa362da3aa560a92f0b8aeec0dfda31713163042.pdf)
+
+  termsOfService: https://www.weatherunion.com/tnc/
+  contact:
+    email: info@weatherunion.com
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Weather Union
+  url: https://www.weatherunion.com/
+servers:
+  - url: https://www.weatherunion.com/gw/weather/external/v0
+tags:
+  - name: Get Weather Data
+    description: >-
+      This API is for fetching weather data at a given latitude and longitude within 2 km radius of our weather device.
+  - name: Get Locality Weather Data
+    description: >-
+      This API is for fetching current weather data for a given locality id. Please find the list of localities supported [here](https://b.zmtcdn.com/data/file_assets/65fa362da3aa560a92f0b8aeec0dfda31713163042.pdf).
+paths:
+  /get_weather_data:
+    get:
+      tags:
+      - Get Weather Data
+      summary: ''
+      description: ''
+      operationId: getWeatherData
+      security:
+       - XZomatoAPIKey: []
+      parameters:
+        - in: query
+          name: latitude
+          required: true
+          schema:
+            type: integer
+            format: float
+          example: 28.555596
+        - in: query
+          name: longitude
+          required: true
+          schema:
+            type: integer
+            format: float
+          example: 77.345713
+      responses:
+        '200':
+          description: Successful response fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Data'
+              examples:
+                SuccessfulResponse:
+                  $ref: '#/components/examples/SuccessfulResponse'
+                TemporarilyUnavailable:
+                  $ref: '#/components/examples/TemporarilyUnavailable'
+                LatLongUnsupported:
+                  $ref: '#/components/examples/LatLongUnsupported'
+        '400':
+          description: Co-ordinates are invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                CoordinatesInvalid:
+                  $ref: '#/components/examples/CoordinatesInvalid'
+        '429':
+          description: Daily quota for API key exhausted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                DailyQuotaExhausted:
+                  $ref: '#/components/examples/DailyQuotaExhausted'
+        '500':
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                SomethingWentWrong:
+                  $ref: '#/components/examples/SomethingWentWrong'
+        '403':
+          description: Could not authenticate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                CouldNotAuthenticate:
+                  $ref: '#/components/examples/CouldNotAuthenticate'
+  /get_locality_weather_data:
+    get:
+      tags:
+        - Get Locality Weather Data
+      summary: ''
+      description: ''
+      operationId: getLocalityWeatherData
+      security:
+       - XZomatoAPIKey: []
+      parameters:
+        - in: query
+          name: locality_id
+          required: true
+          schema:
+            type: string
+          example: ZWL007666
+      responses:
+        '200':
+          description: Successful response fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Data'
+              examples:
+                SuccessfulResponse:
+                  $ref: '#/components/examples/SuccessfulResponse'
+                TemporarilyUnavailable:
+                  $ref: '#/components/examples/TemporarilyUnavailable'
+                LatLongUnsupported:
+                  $ref: '#/components/examples/LatLongUnsupported'
+        '400':
+          description: Co-ordinates are invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                CheckLocalityId:
+                  $ref: '#/components/examples/CheckLocalityId'
+        '429':
+          description: Daily quota for API key exhausted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                DailyQuotaExhausted:
+                  $ref: '#/components/examples/DailyQuotaExhausted'
+        '500':
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                SomethingWentWrong:
+                  $ref: '#/components/examples/SomethingWentWrong'
+        '403':
+          description: Could not authenticate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                CouldNotAuthenticate:
+                  $ref: '#/components/examples/CouldNotAuthenticate'
+components:
+  schemas:
+    Data:
+      type: object
+      properties:
+        status:
+          type: string
+          description: 'Status code'
+          example: 200
+        message:
+          type: string
+          description: 'Status code description'
+          example: ''
+        device_type:
+          type: string
+          description: |-
+            Type of weather device
+            1 - AWS (all locality_weather_data parameters available)
+            2 - Rain gauge system (rain_intensity and rain_accumulation available)
+          example: 1
+        locality_weather_data:
+          type: object
+          description: '(If parameter value is not available, null will be returned)'
+          properties:
+            temperature:
+              type: number
+              format: float
+              description: 'Current temperature in °C'
+              example: 25.68
+            humidity:
+              type: number
+              format: float
+              description: 'Current humidity in %'
+              example: 25.81
+            wind_speed:
+              type: number
+              format: float
+              description: 'Current wind speed in m/s'
+              example: 1.15
+            wind_direction:
+              type: number
+              format: float
+              description: 'Current wind direction in degree'
+              example: 331.2
+            rain_intensity:
+              type: number
+              description: 'Current rain intensity in mm/min'
+              example: 0
+            rain_accumulation:
+              type: number
+              format: float
+              description: 'Total rain accumulation (mm) today from 12 AM IST'
+              example: 0.4
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          description: 'Status code'
+        message:
+          type: string
+          description: 'Status code description'
+  securitySchemes:
+    XZomatoAPIKey:
+      type: apiKey
+      name: x-zomato-api-key
+      in: header
+  examples:
+    SuccessfulResponse:
+      summary: 'A successful response'
+      value:
+        status: 200
+        message: ''
+        device_type: 1,
+        locality_weather_data:
+          temperature: 25.68,
+          humidity: 25.81,
+          wind_speed: 1.15,
+          wind_direction: 331.2,
+          rain_intensity: 0,
+          rain_accumulation: 0.4
+    TemporarilyUnavailable:
+      summary: 'Temporarily Unavailable'
+      description: 'Unable to fetch data at this point in time for this lat lon'
+      value:
+        status: 200
+        message: 'temporarily unavailable'
+    LatLongUnsupported:
+      summary: 'Lat-Long Unsupported'
+      description: 'Entered latitude/longitude is not supported'
+      value:
+        status: 200
+        message: 'latitude longitude not supported. refer to the api doc for supported areas'
+    CoordinatesInvalid:
+      summary: 'Coordinates Invalid'
+      description: |-
+        Empty or invalid latitude/longitude given in params.
+        
+        Latitude range -90° to 90°
+        
+        Longitude range -180° to 180°
+      value:
+        status: 400
+        message: 'coordinates are invalid'
+    DailyQuotaExhausted:
+      summary: 'Daily Quota Exhausted'
+      description: 'Daily api quota for user is already exhausted'
+      value:
+        status: 429
+        message: 'daily quota for api key exhausted'
+    SomethingWentWrong:
+      summary: 'Something Went Wrong'
+      description: 'In case of error in fetching data'
+      value:
+        status: 500
+        message: 'something-went-wrong'
+    CouldNotAuthenticate:
+      summary: 'Could Not Authenticate'
+      description: 'Given api key is invalid'
+      value:
+        status: 403
+        message: 'could not authenticate'
+    CheckLocalityId:
+      summary: 'Check Locality ID'
+      description: 'Invalid locality id entered in params'
+      value:
+        status: 400
+        message: 'check the locality id from the api doc'
